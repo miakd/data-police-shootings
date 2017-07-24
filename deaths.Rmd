@@ -1,0 +1,60 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Red circles indicate individual deaths; click on a circle to see the name of the deceased and the date of the shooting.  
+
+Orange circles indicate cities where multiple shootings have occured; click on an orange circle to expand the individual shootings.
+
+
+```{r, echo=FALSE, error = FALSE, message=FALSE, warning=FALSE}
+library(leaflet)
+library(sp)
+library(rgdal)
+library(maps)
+library(htmltools)
+library(maptools)
+library(knitr)
+library(rmarkdown)
+
+#see deaths.R for pre-data steps
+
+deaths=read.csv('deaths_7.3.17.csv')
+state = readShapeSpatial(fn="State_2010Census_DP1")
+mapStates = map("state", fill = TRUE, plot = FALSE)
+leaflet(data = mapStates) %>% addProviderTiles(providers$CartoDB.Positron) %>%
+  addCircleMarkers(
+    radius=12,
+    color='firebrick',
+    lng = deaths$lon,
+    lat = deaths$lat,
+    popup = htmlEscape(deaths$name_date),
+    clusterOptions = markerClusterOptions(
+      freezeAtZoom = 15,
+      iconCreateFunction = JS(
+        "function (cluster) {
+        var childCount = cluster.getChildCount();
+        var c = ' marker-cluster-';
+        if (childCount < 100) {
+        c += 'large';
+        } else if (childCount < 1000) {
+        c += 'large';
+        } else {
+        c += 'large';
+        }
+        return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
+        
+        }"
+)
+      )
+      )
+```
+
+<br>
+
+This map shows fatal police shootings in the U.S. from January 1, 2015 to July 3, 2017 using approximate locations based on the city in which the shooting took place (the exact addresses of the shootings are not available).  The data comes from the [Washington Post police shooting database](https://github.com/washingtonpost/data-police-shootings).  This database only includes fatal shootings.  Police often use other forms of fatal force, such as choking and battering, like in the high profile cases of Eric Garner and Freddie Gray.  So, this map underestimates the extent of killings by police in the U.S.
